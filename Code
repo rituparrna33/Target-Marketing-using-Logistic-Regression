@@ -54,3 +54,22 @@ plot(sortedbyprob$cumulative,
      xlab="#Prospects Targeted", ylab="#positive responses")
 under40<-sortedbyprob$cumulative<40
 sum(under40)
+
+#Question 8: Crosstab
+library(gmodels)
+CrossTable(datatest$y,datatest$prediction,prop.r=TRUE, prop.c=FALSE, prop.t=FALSE,
+           prop.chisq=FALSE, dnn = c("Real Response", "Predicted Response"))
+           
+           
+sortedbyprob$y_real = cumsum(sortedbyprob$y) 
+sortedbyprob
+plot(sortedbyprob$cumulative,
+     main="(Expected) Sales",
+     xlab="#Prospects", ylab="Sales",
+     type="l",
+     col="magenta")
+lines(sortedbyprob$y_real, col="green")
+      legend("bottomright",
+             c("Predicted Responses","Real Responses"),
+             fill=c("blue","green")
+      ))  
