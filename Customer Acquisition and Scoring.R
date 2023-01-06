@@ -1,0 +1,104 @@
+
+"List Scoring exercise :Customer Acquisition & Scoring"
+
+
+# Clear All Variables & Clear Screen
+rm(list=ls())
+cat("\014")
+
+# Read in the Data
+data= read.csv("Data_Estimation_R-1.csv")
+
+# Explore the data
+getwd()
+str(data)
+summary(data)
+
+## BINARY LOGIT MODEL
+# Run the Binary Logit Model (includes an INTERCEPT)
+glm.model<-glm(y~ gender+hl1+hl2+hl3+hl5+hl6 , data=data, family='binomial')
+
+# Display Results
+summary(glm.model)
+
+## SCORING the TESTING Data 
+##Read the holdout data
+datatest= read.csv("Data_Holdout_R-1.csv")
+
+# Predicting Probability for the 300 TESTING IDs based on the Model Estimates
+datatest$probability<- predict(glm.model,datatest,type = 'response')
+str(datatest)
+head(datatest)
+# Predicting Buy/No Buy 
+datatest$prediction<- round(predict(glm.model,datatest,type = 'response'),0)
+head(datatest)
+# Number of Buyers
+sum(datatest$y)
+sum(datatest$prediction)
+
+# Add Lift to the Forecast. Recall lift is simply the predicted response rate 
+#divided by the average response rate of the Training sample
+
+datatest$lift= datatest$probability/mean(data$y)
+# Sorting Data by lift decreasing order to eventually plot marginal response rate
+sortedbylift<-datatest[order(-datatest$lift),]
+sortedbylift
+
+
+# Histogram of Props
+hist(datatest$probability, main = paste("Histogram of Response Probs"), xlab = "Prob of Response")
+
+# Plotting Marginal Response Rate vs. Number of Prospects Targeted
+sortedbyprob<-datatest[order(-datatest$probability),]
+sortedbyprob
+
+plot(sortedbyprob$probability, main="Marginal Response Rate",
+     xlab="Prospects", ylab="Response Rate")
+
+##We know that average CLV is $30 and the solicitation cost is $12. 
+##Based on the Marginal Cost Rule determine who the CD club should send invitations to?
+
+targetlist<-sortedbylift$probability>(12/30)
+sum(targetlist)
+##116 customers
+
+sortedbyprob$cumulative<-cumsum(sortedbyprob$probability)
+sortedbyprob
+## plot for Number of Positive Responses vs. Number of Prospects Targeted.
+plot(sortedbyprob$cumulative,
+     xlab="#Prospects Targeted", ylab="#positive responses")
+
+##The CD club has only 40 items of the collector’s edition of “Pink Floyd’s The Wall”. 
+##Based on the Limited Supply Rule, which prospects (and how many) on the Testing list should the CD club
+##send an invitation to?
+under40<-sortedbyprob$cumulative<40
+sum(under40)
+##64 customers
+
+
+## Confusion Matrix
+library(gmodels)
+c<-CrossTable(datatest$y,datatest$prediction,prop.r=TRUE, prop.c=FALSE, prop.t=FALSE,
+           prop.chisq=FALSE, dnn = c("Real Response", "Predicted Response"))
+
+
+##Plot the curve for curve for number of Actual Positive Responses vs. Number of Prospects Targeted
+##Superimpose on this the curve obtained in step 6 above.
+
+sortedbyprob$y_real = cumsum(sortedbyprob$y) 
+sortedbyprob
+plot(sortedbyprob$cumulative,
+     main="(Expected) Sales",
+     xlab="#Prospects", ylab="Sales",
+     type="l",
+     col="magenta")
+lines(sortedbyprob$y_real, col="green")
+      legend( "topleft",c("Predicted Responses","Real Responses"),
+             fill=c("magenta","green")
+      ) 
+  
+  
+##Overall, the model is reasonably accurate, however it tends to over-predict the response rates.
+#We can see here that, based on our predictive model, we would not have reached out to enough prospects for
+#our 40 limited edition CDs. In reality we would need to reach out to ~90 customers to appropriately match
+#demand.
