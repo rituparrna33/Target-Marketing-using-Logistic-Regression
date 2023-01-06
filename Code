@@ -41,3 +41,16 @@ plot(sortedbyprob$probability, main="Marginal Response Rate",
 
 
 which(sortedbylift$probability>(12/30))
+
+
+
+targetlist<-sortedbylift$probability>(12/30)
+sum(targetlist)
+
+sortedbyprob$cumulative<-cumsum(sortedbyprob$probability)
+sortedbyprob
+
+plot(sortedbyprob$cumulative,
+     xlab="#Prospects Targeted", ylab="#positive responses")
+under40<-sortedbyprob$cumulative<40
+sum(under40)
