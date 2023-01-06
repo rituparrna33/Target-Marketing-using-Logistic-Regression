@@ -1,1 +1,43 @@
 
+List Scoring exercise "
+
+
+# Clear All Variables & Clear Screen
+rm(list=ls())
+cat("\014")
+
+data= read.csv("Data_Estimation_R-1.csv")
+
+getwd()
+str(data)
+summary(data)
+
+
+glm.model<-glm(y~ gender+hl1+hl2+hl3+hl5+hl6 , data=data, family='binomial')
+summary(glm.model)
+
+datatest= read.csv("Data_Holdout_R-1.csv")
+datatest$probability<- predict(glm.model,datatest,type = 'response')
+str(datatest)
+head(datatest)
+datatest$prediction<- round(predict(glm.model,datatest,type = 'response'),0)
+head(datatest)
+sum(datatest$y)
+sum(datatest$prediction)
+
+datatest$lift= datatest$probability/mean(data$y)
+sortedbylift<-datatest[order(-datatest$lift),]
+sortedbylift
+
+hist(datatest$probability, main = paste("Histogram of Response Probs"), xlab = "Prob of Response")
+
+
+sortedbyprob<-datatest[order(-datatest$probability),]
+sortedbyprob
+
+
+plot(sortedbyprob$probability, main="Marginal Response Rate",
+     xlab="Prospects", ylab="Response Rate")
+
+
+which(sortedbylift$probability>(12/30))
