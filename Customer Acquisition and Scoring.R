@@ -1,3 +1,6 @@
+file:///Users/rituparnadas/Downloads/Customer-Acquisition-and-Scoring.html
+
+
 
 "List Scoring exercise :Customer Acquisition & Scoring"
 
